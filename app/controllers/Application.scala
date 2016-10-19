@@ -11,13 +11,15 @@ import reactivemongo.api.ReadPreference
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson.{BSONDocument, Macros}
 
+
+//TODO how do I used DI instead of these two imports?
 import play.api.Play.current
 import play.api.i18n.Messages.Implicits._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 
-case class PlaceData(name: String, pictureURL: String)
+case class PlaceData(name: String)
 
 case class Place(name: String, picture: Array[Byte])
 
@@ -29,6 +31,7 @@ object Place {
 
 class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends Controller
   with MongoController with ReactiveMongoComponents {
+
   def index = Action.async {implicit request =>
     retrieveAllPlaces.map(places => Ok(views.html.main(places, Application.createPlaceForm)))
   }
@@ -60,13 +63,21 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:
   }
 
   def upload = Action.async(parse.multipartFormData) { implicit request =>
-    placesFuture.flatMap(places => {
-      request.body.file("picture").map { picture =>
-        places.insert(Place(picture.filename, Files.toByteArray(picture.ref.file)))
-        Future(Redirect(routes.Application.index()).flashing("success" -> "Successfully added place"))
-      }.getOrElse {
-        Future(Redirect(routes.Application.index()).flashing("error" -> "Could not upload place. Please correct the form below."))
-      }
+    val boundForm = Application.createPlaceForm.bindFromRequest()
+    boundForm.fold(
+     formWithErrors => {
+       // TODO pass in formWithErrors into index method so that the form is populated with the values.
+       Future(Redirect(routes.Application.index()).flashing("error" -> "Could not upload place. Please correct the form below."))
+     },
+      placeData => {
+        placesFuture.flatMap(places => {
+          request.body.file("picture").map { picture =>
+            places.insert(Place(placeData.name, Files.toByteArray(picture.ref.file)))
+            Future(Redirect(routes.Application.index()).flashing("success" -> "Successfully added place"))
+          }.getOrElse {
+            Future(Redirect(routes.Application.index()).flashing("error" -> "Could not upload place. Please correct the form below."))
+          }
+        })
     })
   }
 }
@@ -74,8 +85,7 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:
 object Application {
   val createPlaceForm = Form(
     mapping(
-      "name" -> nonEmptyText,
-      "pictureURL" -> nonEmptyText
+      "name" -> nonEmptyText
     )(PlaceData.apply)(PlaceData.unapply)
   )
 }

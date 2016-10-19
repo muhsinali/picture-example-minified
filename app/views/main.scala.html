@@ -23,13 +23,9 @@
     <fieldset>
     <legend>Add new place:</legend>
         @helper.inputText(form("name"))
-        @helper.inputFile(form("pictureURL"))
+        @helper.inputFile(form("picture"))
     <button class="btn btn-primary" type="submit">Create</button>
     </fieldset>
-<!--<input type="file" name="picture">-->
-    <!--<p>-->
-        <!--<input type="submit">-->
-    <!--</p>-->
 }
 
 @for(place <- placesList) {
