@@ -12,16 +12,20 @@ import reactivemongo.bson.{BSONDocument, Macros}
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration._
 
+
+
 case class Place(name: String, picture: Array[Byte])
 
-object Place{
+object Place {
   implicit val formatter = Macros.handler[Place]
 }
 
+
+
 class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends Controller
   with MongoController with ReactiveMongoComponents {
-  def index = Action {implicit request =>
-    Ok(views.html.main(Await.result(retrieveAllPlaces, 1 seconds)))
+  def index = Action.async {implicit request =>
+    retrieveAllPlaces.map(places => Ok(views.html.main(places)))
   }
 
   def placesFuture: Future[BSONCollection] = database.map(_.collection[BSONCollection]("places"))
@@ -43,11 +47,10 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:
     foundPlace
   }
 
-
   def getPictureOfPlace(name: String) = Action.async{
     findByName(name).map(placeOpt =>
       if (placeOpt.isDefined) Ok(placeOpt.get.picture)
-      else BadRequest("Uh oh")
+      else BadRequest(s"Could not retrieve the place named $name")
     )
   }
 
@@ -55,9 +58,9 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:
     placesFuture.flatMap(places => {
       request.body.file("picture").map { picture =>
         places.insert(Place(picture.filename, Files.toByteArray(picture.ref.file)))
-        Future(Redirect(routes.Application.index()))
+        Future(Redirect(routes.Application.index()).flashing("success" -> "Successfully added place"))
       }.getOrElse {
-        Future(Redirect(routes.Application.index()))
+        Future(Redirect(routes.Application.index()).flashing("error" -> "Could not upload place. Please correct the form below."))
       }
     })
   }
