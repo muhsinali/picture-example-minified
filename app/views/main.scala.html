@@ -9,5 +9,5 @@
 
 @for(place <- placesList) {
     <p>@(place.name)</p>
-    <img style="height:200px;" src="/get-picture-of-place/@(place.name)" />
+    <img style="height:200px;" src="@routes.Application.getPictureOfPlace(place.name)" />
 }

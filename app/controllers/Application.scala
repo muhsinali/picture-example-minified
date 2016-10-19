@@ -27,7 +27,7 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:
   def placesFuture: Future[BSONCollection] = database.map(_.collection[BSONCollection]("places"))
 
   def retrieveAllPlaces: Future[List[Place]] = {
-    val placesList: Future[List[Place]] = placesFuture.flatMap({
+    val placesList = placesFuture.flatMap({
       _.find(BSONDocument()).
         cursor[Place](ReadPreference.Primary).
         collect[List]()
@@ -35,13 +35,14 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:
     placesList
   }
 
-  // TODO would like to use an ID that's generated internally (ObjectID from MongodDB database?)
+  // TODO would like to use an ID that's generated internally (find out how to use ObjectID from MongodDB database)
   def findByName(name: String): Future[Option[Place]] = {
     val foundPlace = placesFuture.flatMap({
       _.find(BSONDocument("name" -> name)).one[Place](ReadPreference.Primary)
     })
     foundPlace
   }
+
 
   def getPictureOfPlace(name: String) = Action.async{
     findByName(name).map(placeOpt =>
