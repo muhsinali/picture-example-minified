@@ -1,4 +1,4 @@
 # An example controller showing a sample home page
 GET     /                                   controllers.Application.index
 POST    /                                   controllers.Application.upload()
-GET     /get-picture-of-person/:name         controllers.Application.getPictureOfPerson(name: String)
+GET     /get-picture-of-place/:name         controllers.Application.getPictureOfPlace(name: String)

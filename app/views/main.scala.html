@@ -1,13 +1,13 @@
-@(peopleList: List[Person])
+@(placesList: List[Place])
 
-@for(person <- peopleList) {
-    <p>@(person.name)</p>
-    <p>/Users/msa110/Desktop/Desktop_stuff/Pictures/Places/@(person.name)</p>
-    <img src="/get-picture-of-person/@(person.name)" />
-}
 @helper.form(action = routes.Application.upload, 'enctype -> "multipart/form-data") {
 <input type="file" name="picture">
     <p>
         <input type="submit">
     </p>
+}
+
+@for(place <- placesList) {
+    <p>@(place.name)</p>
+    <img style="height:200px;" src="/get-picture-of-place/@(place.name)" />
 }
