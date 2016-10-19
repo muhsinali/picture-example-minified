@@ -3,16 +3,21 @@ package controllers
 import javax.inject.Inject
 
 import com.google.common.io.Files
+import play.api.data.Form
+import play.api.data.Forms._
 import play.api.mvc.{Action, Controller}
 import play.modules.reactivemongo.{MongoController, ReactiveMongoApi, ReactiveMongoComponents}
 import reactivemongo.api.ReadPreference
 import reactivemongo.api.collections.bson.BSONCollection
 import reactivemongo.bson.{BSONDocument, Macros}
 
-import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.concurrent.duration._
+import play.api.Play.current
+import play.api.i18n.Messages.Implicits._
+
+import scala.concurrent.{ExecutionContext, Future}
 
 
+case class PlaceData(name: String, pictureURL: String)
 
 case class Place(name: String, picture: Array[Byte])
 
@@ -25,7 +30,7 @@ object Place {
 class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec: ExecutionContext) extends Controller
   with MongoController with ReactiveMongoComponents {
   def index = Action.async {implicit request =>
-    retrieveAllPlaces.map(places => Ok(views.html.main(places)))
+    retrieveAllPlaces.map(places => Ok(views.html.main(places, Application.createPlaceForm)))
   }
 
   def placesFuture: Future[BSONCollection] = database.map(_.collection[BSONCollection]("places"))
@@ -64,4 +69,13 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:
       }
     })
   }
+}
+
+object Application {
+  val createPlaceForm = Form(
+    mapping(
+      "name" -> nonEmptyText,
+      "pictureURL" -> nonEmptyText
+    )(PlaceData.apply)(PlaceData.unapply)
+  )
 }

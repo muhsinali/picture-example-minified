@@ -1,5 +1,12 @@
-@(placesList: List[Place])(implicit flash: Flash)
+@(placesList: List[Place], form: Form[PlaceData])(implicit flash: Flash, messages: Messages)
 
+
+<html>
+<head>
+    <link rel="stylesheet" media="screen" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <title>Places</title>
+</head>
+<body class="container">
 @if(flash.get("success").isDefined){
     <div class="alert alert-success">
         @flash.get("success")
@@ -13,13 +20,20 @@
 }
 
 @helper.form(action = routes.Application.upload, 'enctype -> "multipart/form-data") {
-<input type="file" name="picture">
-    <p>
-        <input type="submit">
-    </p>
+    <fieldset>
+    <legend>Add new place:</legend>
+        @helper.inputText(form("name"))
+        @helper.inputFile(form("pictureURL"))
+    <button class="btn btn-primary" type="submit">Create</button>
+    </fieldset>
+<!--<input type="file" name="picture">-->
+    <!--<p>-->
+        <!--<input type="submit">-->
+    <!--</p>-->
 }
 
 @for(place <- placesList) {
     <p>@(place.name)</p>
     <img style="height:200px;" src="@routes.Application.getPictureOfPlace(place.name)" />
 }
+</body>
