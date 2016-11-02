@@ -65,19 +65,19 @@ class Application @Inject()(val reactiveMongoApi: ReactiveMongoApi)(implicit ec:
   def upload = Action.async(parse.multipartFormData) { implicit request =>
     val boundForm = Application.createPlaceForm.bindFromRequest()
     boundForm.fold(
-     formWithErrors => {
-       // TODO pass in formWithErrors into index method so that the form is populated with the values.
-       Future(Redirect(routes.Application.index()).flashing("error" -> "Could not upload place. Please correct the form below."))
-     },
-      placeData => {
-        placesFuture.flatMap(places => {
-          request.body.file("picture").map { picture =>
-            places.insert(Place(placeData.name, Files.toByteArray(picture.ref.file)))
-            Future(Redirect(routes.Application.index()).flashing("success" -> "Successfully added place"))
-          }.getOrElse {
-            Future(Redirect(routes.Application.index()).flashing("error" -> "Could not upload place. Please correct the form below."))
-          }
-        })
+    formWithErrors => {
+     // TODO pass in formWithErrors into index method so that the form is populated with the values.
+     Future(Redirect(routes.Application.index()).flashing("error" -> "Could not upload place. Please correct the form below."))
+    },
+    placeData => {
+      placesFuture.flatMap(places => {
+        request.body.file("picture").map { picture =>
+          places.insert(Place(placeData.name, Files.toByteArray(picture.ref.file)))
+          Future(Redirect(routes.Application.index()).flashing("success" -> "Successfully added place"))
+        }.getOrElse {
+          Future(Redirect(routes.Application.index()).flashing("error" -> "Could not upload place. Please correct the form below."))
+        }
+      })
     })
   }
 }
